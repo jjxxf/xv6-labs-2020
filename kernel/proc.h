@@ -1,9 +1,10 @@
 // Saved registers for kernel context switches.
+// 用于保存内核上下文切换时的寄存器状态
 struct context {
-  uint64 ra;
-  uint64 sp;
+  uint64 ra; // 常用于存储函数返回地址
+  uint64 sp; // 指向当前的栈顶位置
 
-  // callee-saved
+  // callee-saved  由被调用者（callee）保存和恢复的寄存器
   uint64 s0;
   uint64 s1;
   uint64 s2;
@@ -20,11 +21,11 @@ struct context {
 
 // Per-CPU state.
 struct cpu {
-  struct proc *proc;          // The process running on this cpu, or null.
-  struct context context;     // swtch() here to enter scheduler().
-  int noff;                   // Depth of push_off() nesting.
-  int intena;                 // Were interrupts enabled before push_off()?
-};
+  struct proc *proc;          // The process running on this cpu, or null. 正在运行在这个cpu上的进程，或者为空
+  struct context context;     // swtch() here to enter scheduler(). 用于进入 scheduler() 的 swtch()。用于保存 CPU 的上下文信息。在进行上下文切换时，swtch() 函数会使用这个字段来进入调度器（scheduler）
+  int noff;                   // Depth of push_off() nesting. push_off() 嵌套的深度。用于关闭中断，这个字段记录了关闭中断的嵌套层次
+  int intena;                 // Were interrupts enabled before push_off()? push_off() 之前中断是否被打开？
+}; 
 
 extern struct cpu cpus[NCPU];
 
@@ -41,6 +42,7 @@ extern struct cpu cpus[NCPU];
 // the trapframe includes callee-saved user registers like s0-s11 because the
 // return-to-user path via usertrapret() doesn't return through
 // the entire kernel call stack.
+// 用于保存各种重要的寄存器状态，以便在中断处理过程中恢复现场
 struct trapframe {
   /*   0 */ uint64 kernel_satp;   // kernel page table
   /*   8 */ uint64 kernel_sp;     // top of process's kernel stack
@@ -87,20 +89,22 @@ struct proc {
   struct spinlock lock;
 
   // p->lock must be held when using these:
-  enum procstate state;        // Process state
-  struct proc *parent;         // Parent process
-  void *chan;                  // If non-zero, sleeping on chan
-  int killed;                  // If non-zero, have been killed
-  int xstate;                  // Exit status to be returned to parent's wait
-  int pid;                     // Process ID
+  enum procstate state;        // Process state 进程状态
+  struct proc *parent;         // Parent process 父进程
+  void *chan;                  // If non-zero, sleeping on chan 如果非0.在chan等待
+  int killed;                  // If non-zero, have been killed 如果非0.已经被杀死
+  int xstate;                  // Exit status to be returned to parent's wait 进程退出状态，将返回给父进程的 wait
+  int pid;    
+  // 作业1                 // Process ID
+  int trace_mask;              // Trace mask for this process 用于跟踪进程的掩码
 
   // these are private to the process, so p->lock need not be held.
-  uint64 kstack;               // Virtual address of kernel stack
-  uint64 sz;                   // Size of process memory (bytes)
-  pagetable_t pagetable;       // User page table
-  struct trapframe *trapframe; // data page for trampoline.S
-  struct context context;      // swtch() here to run process
-  struct file *ofile[NOFILE];  // Open files
-  struct inode *cwd;           // Current directory
-  char name[16];               // Process name (debugging)
+  uint64 kstack;               // Virtual address of kernel stack 内核栈的虚拟地址
+  uint64 sz;                   // Size of process memory (bytes) 进程内存的大小（字节）
+  pagetable_t pagetable;       // User page table 用户页表
+  struct trapframe *trapframe; // data page for trampoline.S 用于 trampoline.S 的数据页
+  struct context context;      // swtch() here to run process 切换到这里以运行进程 
+  struct file *ofile[NOFILE];  // Open files 打开的文件
+  struct inode *cwd;           // Current directory 当前目录
+  char name[16];               // Process name (debugging) 进程名（调试）
 };

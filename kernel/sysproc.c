@@ -6,6 +6,7 @@
 #include "memlayout.h"
 #include "spinlock.h"
 #include "proc.h"
+#include "sysinfo.h"
 
 uint64
 sys_exit(void)
@@ -95,3 +96,37 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+uint64
+sys_trace(void)
+{
+  int mask;
+  struct proc *p = myproc(); //获取当前函数的进程结构体
+  if(argint(0, &mask) < 0)
+    return -1;
+
+  // mask默认为0，所以不会进入syscall的打印系统调用信息的部分，只有在这里传进去参数才会打印
+  p->trace_mask = mask; //trace_mask字段赋值为mask   
+  return 0;
+}
+
+// 作业2
+uint64
+sys_sysinfo(void)
+{
+  struct sysinfo info;
+  uint64 st;
+
+  if(argaddr(0, &st) < 0)
+    return -1;
+
+  info.freemem = freebytes();
+  info.nproc = procnum();
+
+  if(copyout(myproc()->pagetable, st, (char *)&info, sizeof(info)) < 0) // 将info传递给赋给st，传递至用户空间
+    return -1;
+
+  return 0;  
+}
+
+

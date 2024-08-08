@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "condition_variable": "c",
+        "types.h": "c",
+        "user.h": "c",
+        "stat.h": "c",
+        "fs.h": "c",
+        "defs.h": "c"
+    }
+}

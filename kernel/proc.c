@@ -64,6 +64,7 @@ mycpu(void) {
 }
 
 // Return the current struct proc *, or zero if none.
+// 返回当前正在运行的进程结构体指针 struct proc*，如果没有正在运行的进程，则返回零。
 struct proc*
 myproc(void) {
   push_off();
@@ -274,6 +275,9 @@ fork(void)
     return -1;
   }
   np->sz = p->sz;
+
+  // 作业1，使子进程的 trace_mask 与父进程相同
+  np->trace_mask = p->trace_mask;
 
   np->parent = p;
 
@@ -692,4 +696,17 @@ procdump(void)
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
+}
+
+// 作业2 获取进程数
+uint64 procnum(void)
+{
+  struct proc *p;
+  uint64 num = 0;
+  for(p = proc; p < &proc[NPROC]; p++){
+    if(p->state == UNUSED)
+      continue;
+    else num++;
+  }
+  return num;
 }
