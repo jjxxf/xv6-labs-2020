@@ -51,6 +51,10 @@ exec(char *path, char **argv)
     uint64 sz1;
     if((sz1 = uvmalloc(pagetable, sz, ph.vaddr + ph.memsz)) == 0)
       goto bad;
+    // 作业3 添加检测，防止程序大小超过 PLIC
+    if(sz1 >= PLIC) { 
+      goto bad;
+    }
     sz = sz1;
     if(ph.vaddr % PGSIZE != 0)
       goto bad;
@@ -115,7 +119,13 @@ exec(char *path, char **argv)
   p->trapframe->epc = elf.entry;  // initial program counter = main
   p->trapframe->sp = sp; // initial stack pointer
   proc_freepagetable(oldpagetable, oldsz);
-
+  // 作业3
+  uvmunmap(p->kernel_pagetable, 0, PGROUNDUP(oldsz)/PGSIZE, 0); // 释放原有内核页表
+  if(uvmcopy_to_kernel(p->pagetable, p->kernel_pagetable, 0, p->sz) < 0){  // 用户空间地址为0到sz
+    goto bad;
+  }
+  // 作业1
+  if(p->pid==1) vmprint(p->pagetable);
   return argc; // this ends up in a0, the first argument to main(argc, argv)
 
  bad:

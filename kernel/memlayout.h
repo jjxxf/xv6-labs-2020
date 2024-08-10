@@ -53,7 +53,8 @@
 
 // map kernel stacks beneath the trampoline,
 // each surrounded by invalid guard pages.
-#define KSTACK(p) (TRAMPOLINE - ((p)+1)* 2*PGSIZE)
+// 用于计算内核栈的位置，并确保每个内核栈都被无效的保护页包围。
+#define KSTACK(p) (TRAMPOLINE - ((p)+1)* 2*PGSIZE) // 因为有保护页，所以乘2*PGSIZE
 
 // User memory layout.
 // Address zero first:

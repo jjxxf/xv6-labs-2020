@@ -31,7 +31,7 @@ copyin_new(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len)
 {
   struct proc *p = myproc();
 
-  if (srcva >= p->sz || srcva+len >= p->sz || srcva+len < srcva)
+  if (srcva >= p->sz || srcva+len >= p->sz || srcva+len < srcva) // 第三个条件是为了防止srcva+len溢出导致srcva+len<srcva
     return -1;
   memmove((void *) dst, (void *)srcva, len);
   stats.ncopyin++;   // XXX lock
