@@ -55,6 +55,9 @@ sys_sbrk(void)
 uint64
 sys_sleep(void)
 {
+  //作业2
+  backtrace();
+
   int n;
   uint ticks0;
 
@@ -94,4 +97,33 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+// 作业3
+uint64
+sys_sigalarm(void)
+{
+  int n;
+  if(argint(0, &n) < 0)
+    return -1;
+  uint64 fn_pointer;
+  if(argaddr(1, &fn_pointer) < 0)
+    return -1;
+  
+  struct proc *p = myproc();
+  p->alarm_interval = n;
+  p->alarm_ticks = n;
+  p->alarm_handler = (void(*)())(fn_pointer); // 转为函数指针
+
+  return 0;
+}
+
+// 作业3
+uint64
+sys_sigreturn(void)
+{
+  struct proc *p = myproc();
+  *p->trapframe = *p->alarm_trapframe; // 恢复到产生时钟中断时正在执行的指令
+  p->alarm_on = 0;
+  return 0;
 }

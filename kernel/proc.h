@@ -103,4 +103,12 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+
+  // 作业3
+  int alarm_interval;          // 闹钟间隔， 0为禁用
+  void(*alarm_handler)();      // 闹钟回调处理函数
+  int alarm_ticks;             // 闹钟剩余ticks数
+  struct trapframe *alarm_trapframe; // 闹钟中断时刻的 trapframe，用于中断处理完成后恢复原程序的正常执行
+  int alarm_on;                // 是否已经有一个闹钟回调正在执行且还未返回（用于防止在 alarm_handler 中途闹钟到期再次调用 alarm_handler，导致 alarm_trapframe 被覆盖）
+
 };

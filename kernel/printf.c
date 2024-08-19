@@ -121,6 +121,7 @@ panic(char *s)
   printf("panic: ");
   printf(s);
   printf("\n");
+  backtrace(); // 作业2
   panicked = 1; // freeze uart output from other CPUs
   for(;;)
     ;
@@ -131,4 +132,19 @@ printfinit(void)
 {
   initlock(&pr.lock, "pr");
   pr.locking = 1;
+}
+
+// 作业2，打印栈回溯
+// 栈从高地址往低地址生长
+void
+backtrace(){
+  uint64 fp = r_fp();
+
+  // 从低地址往高地址回溯
+  // 栈帧指针fp指向栈帧顶端地址，栈帧顶部8个字节存放return address，再往下8个字节存放上一个栈帧指针
+  while(fp != PGROUNDUP(fp)){
+    // 将fp-8强转为地址(return address的地址)，然后解引用输出return address里存到地址
+    printf("%p\n", *(uint64 *)(fp - 8)); // return address用于返回调用该方法的下一条指令的地址
+    fp = *(uint64 *)(fp - 16);
+  }
 }

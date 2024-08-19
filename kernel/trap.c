@@ -77,8 +77,22 @@ usertrap(void)
     exit(-1);
 
   // give up the CPU if this is a timer interrupt.
-  if(which_dev == 2)
+  // if(which_dev == 2)
+  //   yield();
+
+  // 作业3 时钟中断逻辑
+  if(which_dev == 2){ // 每次滴答都会产生计时器中断，进入这里
+    if(p->alarm_interval != 0){
+      p->alarm_ticks--; // 每次滴答，alarm_ticks 减 1
+      if(p->alarm_ticks <= 0 && p->alarm_on == 0){
+        p->alarm_ticks = p->alarm_interval;
+        *p->alarm_trapframe = *p->trapframe; //储存当前进程的 trapframe，用于sys_sigreturn恢复到产生时钟中断时正在执行的指令
+        p->trapframe->epc = (uint64)p->alarm_handler; // 设置调用的函数，中断后回到该函数
+        p->alarm_on = 1;
+      }
+    } 
     yield();
+  }
 
   usertrapret();
 }
@@ -170,9 +184,9 @@ clockintr()
 
 // check if it's an external interrupt or software interrupt,
 // and handle it.
-// returns 2 if timer interrupt,
-// 1 if other device,
-// 0 if not recognized.
+// returns 2 if timer interrupt, 返回 2 表示处理了一个定时器中断
+// 1 if other device, 返回 1 表示处理了一个设备中断
+// 0 if not recognized. 返回 0 表示没有识别出中断
 int
 devintr()
 {
